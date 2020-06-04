@@ -1,0 +1,24 @@
+language: generic
+sudo: required
+
+services:
+  - docker
+
+before_install:
+  - docker build -t deepthikka/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true deepthikka/react-test npm test
+  
+after_success:
+  - docker build -t deepthikka/multi-client ./client
+  - docker build -t deepthikka/multi-nginx ./nginx
+  - docker build -t deepthikka/multi-server ./server
+  - docker build -t deepthikka/multi-worker ./worker
+  #Login to docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin 
+  #Take these images and push them to docker hubs
+  - docker push deepthikka/multi-client
+  - docker push deepthikka/multi-nginx
+  - docker push deepthikka/multi-server
+  - docker push deepthikka/multi-worker
